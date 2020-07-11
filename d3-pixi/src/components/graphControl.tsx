@@ -2,35 +2,64 @@ import * as React from 'react';
 import Graph from './graph';
 export interface IgraphControlProps {
 }
-
 export interface IgraphControlState {
-    graphs: JSX.Element[];
+  height: number;
+  width: number;
+  graphs: JSX.Element[];
+  index: string[];
 }
 export default class graphControl extends React.Component<IgraphControlProps,IgraphControlState> {
   count: number;
   public constructor(props: IgraphControlProps){
     super(props);
-    this.state = {graphs: []};
+    this.state = {height: 500, width: 500, index:[], graphs: []};
     this.count = 0;
+    this.handleWidthChange = this.handleWidthChange.bind(this);
+    this.handleHeightChange = this.handleHeightChange.bind(this);
+    this.handleDelete = this.handleDelete.bind(this);
   } 
   public addGraph(){
     const width = document.getElementById("width");
     const height = document.getElementById("height");
     if(width && height){
-      let graph = <Graph width={Number(width.getAttribute("value"))} height={Number(height.getAttribute("value"))} id={`g_${this.count}`} key={`g_${this.count}`} />;
+      let id = `g_${this.count}`;
+      let graph = ( 
+      <div id={id} style={{position:"relative",float:"left"}} key={this.count}>
+        <Graph width={this.state.width} height={this.state.height} />
+        <button name="delete" style={{position:"absolute",right:"0%",bottom:"0%"}} onClick={this.handleDelete}>Delete</button>
+      </div>
+      )
+      this.setState({index: this.state.index.concat([id]),graphs: this.state.graphs.concat([graph])});
       this.count += 1;
-      this.setState({graphs: this.state.graphs.concat([graph])})
     }
+  }
+  public handleDelete(e: React.MouseEvent<HTMLButtonElement>){
+    let graphs = [...this.state.graphs];
+    let index = [...this.state.index];
+    let key = e.currentTarget.parentElement?.getAttribute("id")
+    if(key){
+      graphs.splice(index.indexOf(key),1);
+      index.splice(index.indexOf(key),1);
+      this.setState({index: index, graphs: graphs});
+    }
+  }
+  public handleWidthChange(e: React.ChangeEvent<HTMLInputElement>){
+    this.setState({width: Number(e.target.value)})
+  }
+  public handleHeightChange(e: React.ChangeEvent<HTMLInputElement>){
+    this.setState({height: Number(e.target.value)})
   }
   public render() {
     return (
     <div>
-      <div style={{float:"left"}}>
-        <input id="width" type="number" placeholder="width" value={500}></input>
-        <input id="height" type="number" placeholder="height" value={500}></input>
+      <div >
+        <input id="width" type="number" placeholder="width" value={this.state.width} onChange={this.handleWidthChange}></input>
+        <input id="height" type="number" placeholder="height" value={this.state.height} onChange={this.handleHeightChange}></input>
         <button onClick={()=>{this.addGraph()}}>Add Graph</button>
       </div>
-      <div style={{clear:"both"}} />
+      <div style={{clear:"both"}}/>
+      <h2>Graphs will show here:</h2>
+      <div style={{clear:"both"}}/>
       <div>
           {this.state.graphs}
       </div>

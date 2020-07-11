@@ -7,13 +7,12 @@ import {dataLoader,nodeInfo, edgeInfo, generateNodeTextures, getNodeColor, getLi
 export interface IGraphProps {
     width: number;
     height: number;
-    id: string;
-    key?: string;
 }
 
 export default class Graph extends React.Component<IGraphProps> {
     app: PIXI.Application;
-    rootRef: React.RefObject<HTMLDivElement>;
+    graphRef: React.RefObject<HTMLDivElement>;
+    statsRef: React.RefObject<HTMLDivElement>;
     stats : Stats;
     stageEdge: PIXI.Container;
     stageNode: PIXI.Container;
@@ -40,7 +39,7 @@ export default class Graph extends React.Component<IGraphProps> {
             width: props.width,
             antialias:true
         })
-        this.viewport = new Viewport.Viewport({screenWidth: this.props.width, screenHeight: this.props.height, interaction: this.app.renderer.plugins.interaction})
+        this.viewport = new Viewport.Viewport({passiveWheel: false, screenWidth: this.props.width, screenHeight: this.props.height, interaction: this.app.renderer.plugins.interaction})
         this.arrowOffset = 10;
         this.viewport.drag().pinch().wheel().decelerate();
         this.app.stage.addChild(this.viewport);
@@ -105,7 +104,8 @@ export default class Graph extends React.Component<IGraphProps> {
         });
 
         // Create reference to let pixi manage its DOM
-        this.rootRef = React.createRef();
+        this.graphRef = React.createRef();
+        this.statsRef = React.createRef();
 
         // Initialize d3 objects
         this.nodes = [];
@@ -121,8 +121,9 @@ export default class Graph extends React.Component<IGraphProps> {
         this.tick = this.tick.bind(this);
         this.contentChangeHandler = this.contentChangeHandler.bind(this);
         this.stats = new Stats();
-        this.stats.dom.style.position="relative";
-	    this.stats.dom.style.top="50px";
+        this.stats.dom.style.position="absolute";
+        this.stats.dom.style.top="0px";
+        this.stats.dom.style.left="0px";
     }
     public tick() {
         this.stats.begin();
@@ -177,23 +178,24 @@ export default class Graph extends React.Component<IGraphProps> {
     public componentDidMount() {
         dataLoader(this.contentChangeHandler);
         this.app.ticker.add(this.tick);
-        document.getElementById(`stat_${this.props.id}`)?.appendChild( this.stats.dom );
-        this.rootRef.current?.appendChild(this.app.view);
+        this.graphRef.current?.appendChild(this.app.view);
+        this.statsRef.current?.appendChild(this.stats.dom);
     }
     public componentWillUnmount(){
-        this.rootRef.current?.removeChild(this.app.view);
-        document.body.removeChild(this.stats.dom);
+        this.graphRef.current?.removeChild(this.app.view);
+        this.statsRef.current?.removeChild(this.stats.dom);
+        this.viewport.destroy({children:true});
         this.app.ticker.remove(this.tick);
-        this.app.destroy();
+        this.app.destroy(true);
         this.simulation.nodes([]);
         this.simulation.force("links",d3.forceLink([]));
         this.simulation.stop();
     }
     public render() {
         return (
-            <div id={this.props.id} className="graph">
-                <div id={`stat_${this.props.id}`} />
-                <div ref={this.rootRef} />
+            <div className="graph" style={{position: "relative"}}>
+                <div ref={this.statsRef}/>
+                <div ref={this.graphRef}/>
             </div>
         );
     }
