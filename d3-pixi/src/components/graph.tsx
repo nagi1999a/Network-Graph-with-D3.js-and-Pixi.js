@@ -28,21 +28,28 @@ export default class Graph extends React.Component<IGraphProps> {
     stageArrow: PIXI.ParticleContainer;
     arrowOffset: number;
     arrowTexture: PIXI.Texture;
+    originalSelect: string;
+    loadingText: PIXI.Text;
 
     public constructor(props: IGraphProps) {
         super(props);
         
         // Create Pixi Application & Viewport
         this.app = new PIXI.Application({
-            backgroundColor: 0xFFFFFF,
+            //backgroundColor: 0xFFFFFF,
             height: props.height,
             width: props.width,
-            antialias:true
+            antialias:true,
+            autoDensity: true,
+            resolution: 2,
+            transparent: true
         })
         this.viewport = new Viewport.Viewport({passiveWheel: false, screenWidth: this.props.width, screenHeight: this.props.height, interaction: this.app.renderer.plugins.interaction})
         this.arrowOffset = 10;
         this.viewport.drag().pinch().wheel().decelerate();
         this.app.stage.addChild(this.viewport);
+        this.app.view.addEventListener("pointerdown",(event)=>{event.preventDefault();}) //prevent from selecting unwanted things while dragging outside
+
         // Get node Textures
         this.nodeTextures = generateNodeTextures();
 
@@ -82,7 +89,7 @@ export default class Graph extends React.Component<IGraphProps> {
                 this.stageNode.addChild(this.focusNodeGFX);
             }
         });
-        this.viewport.on("mousemove", (event: PIXI.InteractionEvent)=>{
+        this.viewport.on("pointermove", (event: PIXI.InteractionEvent)=>{
             this.simulation.restart();
             if(this.focusNode && this.focusNodeGFX){
                 const pos = this.viewport.toLocal(new PIXI.Point(event.data.global.x,event.data.global.y))
@@ -93,8 +100,18 @@ export default class Graph extends React.Component<IGraphProps> {
             }
         })
         this.viewport.on("pointerup",()=>{
-            this.simulation.alphaDecay(0.01);
             if(this.focusNode && this.focusNodeGFX){
+                this.simulation.alphaDecay(0.01);
+                this.focusNode.fx = null;
+                this.focusNode.fy = null;
+                this.focusNode = undefined;
+                this.viewport.plugins.resume("drag");
+                this.stageNode.removeChild(this.focusNodeGFX);
+            }
+        });
+        this.viewport.on("pointerupoutside",()=>{
+            if(this.focusNode && this.focusNodeGFX){
+                this.simulation.alphaDecay(0.01);
                 this.focusNode.fx = null;
                 this.focusNode.fy = null;
                 this.focusNode = undefined;
@@ -113,6 +130,7 @@ export default class Graph extends React.Component<IGraphProps> {
 
         // Create D3-force simulation object
         this.simulation = d3.forceSimulation();
+        this.simulation.stop();
         this.simulation.force("charge", d3.forceManyBody());
         this.simulation.force("center", d3.forceCenter(this.props.width/2,this.props.height/2));
         this.simulation.force("links",d3.forceLink());
@@ -120,10 +138,21 @@ export default class Graph extends React.Component<IGraphProps> {
         // Bind tick function to instance self to let tick function access data
         this.tick = this.tick.bind(this);
         this.contentChangeHandler = this.contentChangeHandler.bind(this);
+
+        // Stats.js Preference
         this.stats = new Stats();
         this.stats.dom.style.position="absolute";
         this.stats.dom.style.top="0px";
         this.stats.dom.style.left="0px";
+
+        // Save Original dragging style
+        this.originalSelect = document.body.style.userSelect;
+
+        // Loading Text
+        this.loadingText = new PIXI.Text('Loading...')
+        this.loadingText.x = this.props.width/2;
+        this.loadingText.y = this.props.height/2;
+        this.loadingText.anchor.set(0.5);
     }
     public tick() {
         this.stats.begin();
@@ -174,9 +203,13 @@ export default class Graph extends React.Component<IGraphProps> {
             edge.gfx = arrowSprite;
             this.stageArrow.addChild(arrowSprite)
         }
+        this.simulation.alpha(1);
+        this.simulation.restart();
+        this.app.stage.removeChild(this.loadingText);
     }
     public componentDidMount() {
         dataLoader(this.contentChangeHandler);
+        this.app.stage.addChild(this.loadingText);
         this.app.ticker.add(this.tick);
         this.graphRef.current?.appendChild(this.app.view);
         this.statsRef.current?.appendChild(this.stats.dom);
@@ -193,9 +226,11 @@ export default class Graph extends React.Component<IGraphProps> {
     }
     public render() {
         return (
-            <div className="graph" style={{position: "relative"}}>
-                <div ref={this.statsRef}/>
-                <div ref={this.graphRef}/>
+            <div className="graph">
+                <div style={{position: "relative"}}>
+                    <div ref={this.statsRef}/>
+                    <div style={{border:"3px solid orange"}} ref={this.graphRef}/>
+                </div>
             </div>
         );
     }

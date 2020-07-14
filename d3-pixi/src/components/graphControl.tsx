@@ -52,14 +52,17 @@ export default class graphControl extends React.Component<IgraphControlProps,Igr
   public render() {
     return (
     <div>
-      <div >
+      <div style={{textAlign:"center"}}>
+        width:
         <input id="width" type="number" placeholder="width" value={this.state.width} onChange={this.handleWidthChange}></input>
+        <br/>
+        height:
         <input id="height" type="number" placeholder="height" value={this.state.height} onChange={this.handleHeightChange}></input>
+        <br/>
         <button onClick={()=>{this.addGraph()}}>Add Graph</button>
+        <br/>
       </div>
-      <div style={{clear:"both"}}/>
-      <h2>Graphs will show here:</h2>
-      <div style={{clear:"both"}}/>
+      <h2 style={{textAlign:"center"}}>Graphs will show here:</h2>
       <div>
           {this.state.graphs}
       </div>

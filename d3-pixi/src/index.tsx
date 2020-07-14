@@ -7,11 +7,12 @@ import GraphControl from './components/graphControl'
 ReactDOM.render(
   <React.StrictMode>
     <div>
-      <h1 id="title">Drawing Network Graph with d3.js and pixi.js using React and Typescript</h1>
-      <GraphControl/>
-      <div style={{clear:"both"}} />
-      {/* <Graph width={window.innerWidth*0.4} height={window.innerHeight*0.5} id="g1"/>
-      <Graph width={window.innerWidth*0.4} height={window.innerHeight*0.5} id="g2"/> */}
+      <div>
+        <h1 id="title">Drawing Network Graph with d3.js and pixi.js using React and Typescript</h1>
+      </div>
+      <div>
+        <GraphControl/>
+      </div>
     </div>
   </React.StrictMode>,
   document.getElementById('root')

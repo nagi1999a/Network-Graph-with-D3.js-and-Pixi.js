@@ -13,15 +13,20 @@ export interface edgeInfo extends d3.SimulationLinkDatum<nodeInfo>{
 }
 
 export function dataLoader(next: Function){
+    setTimeout(() => {
+        dataGenerator(next)
+    }, 3000);
+}
+
+function dataGenerator(next: Function){
     let nodes: nodeInfo[] = [];
     let edges: edgeInfo[] = [];
     for(let i = 0; i < 101; i++)
         nodes.push({name: String(i), group: Math.ceil(Math.random()*9)});
-    for(let i = 0 ; i < 100; i++)
+    for(let i = 0 ; i < 200; i++)
         edges.push({source: Math.ceil(Math.random()*100),target: Math.ceil(Math.random()*100),weight: Math.ceil(Math.random()*5)})
     next(nodes,edges);
 }
-
 export function generateNodeTextures(){
     let Textures: PIXI.Texture[] = [];
     for(let i = 1; i <= 10; i++){
