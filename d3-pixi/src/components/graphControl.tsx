@@ -1,5 +1,5 @@
 import * as React from 'react';
-import Graph from './graph';
+import GraphInfo from './graphInfo'
 export interface IgraphControlProps {
 }
 export interface IgraphControlState {
@@ -25,7 +25,7 @@ export default class graphControl extends React.Component<IgraphControlProps,Igr
       let id = `g_${this.count}`;
       let graph = ( 
       <div id={id} style={{position:"relative",float:"left"}} key={this.count}>
-        <Graph width={this.state.width} height={this.state.height} />
+        <GraphInfo width={this.state.width} height={this.state.height}/>
         <button name="delete" style={{position:"absolute",right:"0%",bottom:"0%"}} onClick={this.handleDelete}>Delete</button>
       </div>
       )

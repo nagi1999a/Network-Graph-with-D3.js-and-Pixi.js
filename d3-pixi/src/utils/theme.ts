@@ -1,15 +1,20 @@
 import * as PIXI from 'pixi.js'
 import * as d3 from 'd3-force'
 
-export interface nodeInfo extends d3.SimulationNodeDatum{
-    name: string;
-    group: number;
+export interface nodeGFX {
+    gfx?: PIXI.DisplayObject;
+}
+export interface edgeGFX {
     gfx?: PIXI.DisplayObject;
 }
 
-export interface edgeInfo extends d3.SimulationLinkDatum<nodeInfo>{
+export interface nodeInfo extends nodeGFX,d3.SimulationNodeDatum{
+    name: string;
+    group: number;
+}
+
+export interface edgeInfo extends edgeGFX,d3.SimulationLinkDatum<nodeInfo>{
     weight: number;
-    gfx?: PIXI.DisplayObject;
 }
 
 export function dataLoader(next: Function){
@@ -17,7 +22,9 @@ export function dataLoader(next: Function){
         dataGenerator(next)
     }, 3000);
 }
+export function showGraphInfo(data: object){
 
+}
 function dataGenerator(next: Function){
     let nodes: nodeInfo[] = [];
     let edges: edgeInfo[] = [];

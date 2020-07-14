@@ -7,6 +7,7 @@ import {dataLoader,nodeInfo, edgeInfo, generateNodeTextures, getNodeColor, getLi
 export interface IGraphProps {
     width: number;
     height: number;
+    showGraphInfo: Function;
 }
 
 export default class Graph extends React.Component<IGraphProps> {
@@ -79,7 +80,7 @@ export default class Graph extends React.Component<IGraphProps> {
             const pos = this.viewport.toLocal(new PIXI.Point(event.data.global.x,event.data.global.y))
             this.focusNode = this.simulation.find(pos.x,pos.y,10);
             if(this.focusNode){
-                console.log(this.focusNode);
+                this.props.showGraphInfo({data:this.focusNode});
                 this.simulation.alpha(0.1);
                 this.simulation.alphaDecay(0);
                 this.simulation.restart();
