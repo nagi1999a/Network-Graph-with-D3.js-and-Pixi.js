@@ -4,6 +4,7 @@ import * as Viewport from 'pixi-viewport'
 import Stats from 'stats.js'
 import * as d3 from 'd3-force';
 import {dataLoader,nodeInfo, edgeInfo, generateNodeTextures, getNodeColor, getLineColor, getNodeTextureIndex } from '../utils/theme'
+
 export interface IGraphProps {
     width: number;
     height: number;
@@ -31,13 +32,15 @@ export default class Graph extends React.Component<IGraphProps> {
     arrowTexture: PIXI.Texture;
     originalSelect: string;
     loadingText: PIXI.Text;
+    forceCharge: d3.ForceManyBody<nodeInfo>;
+    forceCenter: d3.ForceCenter<nodeInfo>;
+    forceLink: d3.ForceLink<nodeInfo, edgeInfo>;
 
     public constructor(props: IGraphProps) {
         super(props);
         
         // Create Pixi Application & Viewport
         this.app = new PIXI.Application({
-            //backgroundColor: 0xFFFFFF,
             height: props.height,
             width: props.width,
             antialias:true,
@@ -49,7 +52,7 @@ export default class Graph extends React.Component<IGraphProps> {
         this.arrowOffset = 10;
         this.viewport.drag().pinch().wheel().decelerate();
         this.app.stage.addChild(this.viewport);
-        this.app.view.addEventListener("pointerdown",(event)=>{event.preventDefault();}) //prevent from selecting unwanted things while dragging outside
+        this.app.view.addEventListener("pointerdown",(event)=>{event.preventDefault();}) // prevent from selecting unwanted things while dragging outside
 
         // Get node Textures
         this.nodeTextures = generateNodeTextures();
@@ -69,11 +72,11 @@ export default class Graph extends React.Component<IGraphProps> {
         }
 
         // Create Empty Edge Graphic and Transparent Interact graphic
-        this.arrowTexture = PIXI.Texture.from('/pngs/arrow.png')
+        this.arrowTexture = PIXI.Texture.from('/pngs/internal/arrow.png')
         this.edgeGFX = new PIXI.Graphics();
         this.stageEdge.addChild(this.edgeGFX);
         this.focusNode = undefined;
-        this.focusNodeGFX = PIXI.Sprite.from('/pngs/click.png');
+        this.focusNodeGFX = PIXI.Sprite.from('/pngs/internal/click.png');
         this.focusNodeGFX.anchor.set(0.5);
         this.focusNodeGFX.scale.set(0.5);
         this.viewport.on("pointerdown",(event: PIXI.InteractionEvent)=>{
@@ -132,9 +135,9 @@ export default class Graph extends React.Component<IGraphProps> {
         // Create D3-force simulation object
         this.simulation = d3.forceSimulation();
         this.simulation.stop();
-        this.simulation.force("charge", d3.forceManyBody());
-        this.simulation.force("center", d3.forceCenter(this.props.width/2,this.props.height/2));
-        this.simulation.force("links",d3.forceLink());
+        this.forceCharge = d3.forceManyBody();
+        this.forceCenter = d3.forceCenter(this.props.width/2,this.props.height/2);
+        this.forceLink = d3.forceLink();
         
         // Bind tick function to instance self to let tick function access data
         this.tick = this.tick.bind(this);
@@ -155,6 +158,7 @@ export default class Graph extends React.Component<IGraphProps> {
         this.loadingText.y = this.props.height/2;
         this.loadingText.anchor.set(0.5);
     }
+
     public tick() {
         this.stats.begin();
         for(const node of this.nodes)
@@ -181,11 +185,11 @@ export default class Graph extends React.Component<IGraphProps> {
         }
         this.stats.end();
     }
+
     public contentChangeHandler(nodes: nodeInfo[],edges: edgeInfo[]){
         this.nodes = nodes;
         this.edges = edges;
         this.simulation.nodes(this.nodes)
-        this.simulation.force("links",d3.forceLink(this.edges));
         for(const node of this.nodes){
             let nodeSprite = new PIXI.Sprite();
             nodeSprite.texture = this.nodeTextures[getNodeTextureIndex(node)];
@@ -204,27 +208,33 @@ export default class Graph extends React.Component<IGraphProps> {
             edge.gfx = arrowSprite;
             this.stageArrow.addChild(arrowSprite)
         }
+        this.simulation.force("charge", this.forceCharge);
+        this.simulation.force("center", this.forceCenter);
+        this.simulation.force("links",this.forceLink.links(this.edges));
         this.simulation.alpha(1);
         this.simulation.restart();
         this.app.stage.removeChild(this.loadingText);
     }
+
     public componentDidMount() {
-        dataLoader(this.contentChangeHandler);
         this.app.stage.addChild(this.loadingText);
         this.app.ticker.add(this.tick);
         this.graphRef.current?.appendChild(this.app.view);
         this.statsRef.current?.appendChild(this.stats.dom);
+        dataLoader(this.contentChangeHandler);
     }
+
     public componentWillUnmount(){
         this.graphRef.current?.removeChild(this.app.view);
         this.statsRef.current?.removeChild(this.stats.dom);
-        this.viewport.destroy({children:true});
-        this.app.ticker.remove(this.tick);
-        this.app.destroy(true);
-        this.simulation.nodes([]);
-        this.simulation.force("links",d3.forceLink([]));
+        this.app.destroy(false, {children:true}); // will trigger children destroy method and also all plugins like TickerPlugin
         this.simulation.stop();
+        this.simulation.force("links", null);
+        this.simulation.force("center", null);
+        this.simulation.force("charge", null);
+        this.simulation.nodes([]);
     }
+
     public render() {
         return (
             <div className="graph">

@@ -1,12 +1,16 @@
 import * as PIXI from 'pixi.js'
 import * as d3 from 'd3-force'
 
+/*********** fix part start ***********/
 export interface nodeGFX {
     gfx?: PIXI.DisplayObject;
 }
 export interface edgeGFX {
     gfx?: PIXI.DisplayObject;
 }
+/*********** fix part end ***********/
+
+// need to modify and complete all export function and interface!
 
 export interface nodeInfo extends nodeGFX,d3.SimulationNodeDatum{
     name: string;
@@ -22,9 +26,7 @@ export function dataLoader(next: Function){
         dataGenerator(next)
     }, 3000);
 }
-export function showGraphInfo(data: object){
 
-}
 function dataGenerator(next: Function){
     let nodes: nodeInfo[] = [];
     let edges: edgeInfo[] = [];
@@ -34,6 +36,12 @@ function dataGenerator(next: Function){
         edges.push({source: Math.ceil(Math.random()*100),target: Math.ceil(Math.random()*100),weight: Math.ceil(Math.random()*5)})
     next(nodes,edges);
 }
+
+export function getNodeColor(node: nodeInfo){
+    const colors: number[] = [0x7DB37B, 0xBFD192, 0xF5E49E, 0xF7C6A3, 0xF4A28B, 0xD7BFFF, 0xF1FFA9, 0xC0FFC0, 0xFFD8D8, 0xD8F0FF];
+    return colors[node.group];
+} 
+
 export function generateNodeTextures(){
     let Textures: PIXI.Texture[] = [];
     for(let i = 1; i <= 10; i++){
@@ -41,16 +49,12 @@ export function generateNodeTextures(){
     }
     return Textures;
 }
-export function getNodeColor(node: nodeInfo){
-    const colors: number[] = [0x7DB37B, 0xBFD192, 0xF5E49E, 0xF7C6A3, 0xF4A28B, 0xD7BFFF, 0xF1FFA9, 0xC0FFC0, 0xFFD8D8, 0xD8F0FF];
-    return colors[node.group];
-} 
+
+export function getNodeTextureIndex(node: nodeInfo){
+    return node.group;
+}
 
 export function getLineColor(edge: edgeInfo){
     const colors: number[] = [0x7DB37B, 0xBFD192, 0xF5E49E, 0xF7C6A3, 0xF4A28B, 0xD7BFFF];
     return colors[edge.weight];
-}
-
-export function getNodeTextureIndex(node: nodeInfo){
-    return node.group;
 }
