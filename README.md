@@ -1,10 +1,11 @@
 # Network Graph with D3.js and Pixi.js using React and Typescript
 
-## This is a simple demo for drawing multiple network graph using the combination of D3.js and Pixi.js, which in theory will take advantage of fast rendering in Pixi.js and fast layout generating in D3.js.
+## Description
+This is a simple demo for drawing multiple network graph using the combination of D3.js and Pixi.js, which in theory will take advantage of fast rendering in Pixi.js and fast layout generating in D3.js.
 
 ### File Description
 1. The main component to draw graph is in `src/compoents/graph.tsx`.
-2. The ways to setup data and change themes are defined in `src/utils/themes.tsx`.
+2. The way to setup data and change themes are defined in `src/utils/themes.tsx`.
 
 ### Usage
 1. Install Dependencies using `yarn install`
