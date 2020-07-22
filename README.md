@@ -14,3 +14,6 @@
 
 ### Notice
 The delete function of demo page may not work properly in react development mode. In my case, after deleting a graph, it will not stop the ticker of Pixi Application, which will cause a huge drop in FPS after multiple creations/deletions, but this problem seems not to happen in production build.
+
+### ScreenShots
+![](https://i.imgur.com/kfzQbYO.gif)
